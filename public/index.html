@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIGA Escola — Painel</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="logo">🏫 SIGA<span>Escola</span></div>
+        <small>Painel de chamada</small>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-group-label">Principal</div>
+        <a class="nav-item active" data-page="attendance" href="#">
+          <span class="icon">📋</span> Chamada
+        </a>
+        <div class="nav-group-label">Cadastros</div>
+        <a class="nav-item" data-page="students" href="#">
+          <span class="icon">👤</span> Alunos
+        </a>
+        <a class="nav-item" data-page="rooms" href="#">
+          <span class="icon">🏫</span> Salas
+        </a>
+        <div class="nav-group-label">Histórico</div>
+        <a class="nav-item" data-page="calls" href="#">
+          <span class="icon">📞</span> Chamadas
+        </a>
+      </nav>
+    </aside>
+
+    <div class="main-content">
+      <div class="topbar">
+        <span class="topbar-title">📋 Registro de Chamada</span>
+        <span class="topbar-date"></span>
+      </div>
+
+      <div class="page-body">
+        <section id="page-attendance" class="page">
+          <div class="card attendance-toolbar-card" style="margin-bottom:20px;">
+            <div class="card-body attendance-toolbar">
+              <div class="form-group attendance-filter-group">
+                <label for="attendance-room-filter">Sala</label>
+                <select class="form-control" id="attendance-room-filter"><option value="">Todas</option></select>
+              </div>
+              <div class="form-group attendance-filter-group">
+                <label for="attendance-date">Data</label>
+                <input type="date" class="form-control" id="attendance-date">
+              </div>
+              <button class="btn btn-whatsapp btn-sm attendance-cta" id="notify-all-button" type="button">
+                📱 Notificar Todos Faltantes
+              </button>
+            </div>
+          </div>
+
+          <div class="stats-grid" id="chamada-stats"></div>
+
+          <div class="card">
+            <div class="card-header">
+              <h2>Lista de Alunos</h2>
+            </div>
+            <div class="card-body">
+              <div id="attendance-table-wrapper">
+                <table id="attendance-table" class="table-list">
+                  <thead>
+                    <tr>
+                      <th>Aluno</th>
+                      <th>RA</th>
+                      <th>Série</th>
+                      <th>Sala</th>
+                      <th>Status</th>
+                      <th>Motivo</th>
+                      <th>Notificar</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+              <div id="attendance-actions" class="list-actions" style="display:none; margin-top: 18px;">
+                <button type="button" id="save-all-attendance" class="btn btn-success">💾 Salvar Chamada</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="page-students" class="page" style="display:none;">
+          <div class="filter-bar">
+            <label style="font-weight:600;">Filtrar série:</label>
+            <select class="form-control" id="series-filter">
+              <option value="">Todas as séries</option>
+            </select>
+            <label style="font-weight:600;">Filtrar sala:</label>
+            <select class="form-control" id="room-filter"><option value="">Todas as salas</option></select>
+            <button type="button" id="refresh-students" class="btn btn-secondary btn-sm">Atualizar</button>
+            <button type="button" id="open-add-student" class="btn btn-primary">+ Novo Aluno</button>
+          </div>
+
+          <div class="card">
+            <div class="card-body" style="padding:0;">
+              <div class="table-wrap">
+                <table id="students-table" class="table-list">
+                  <thead>
+                    <tr>
+                      <th>Aluno</th>
+                      <th>RA</th>
+                      <th>Série</th>
+                      <th>Sala</th>
+                      <th>Responsável</th>
+                      <th>Telefone</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div id="add-student-panel" class="panel-form hidden">
+            <h3>Cadastro de aluno</h3>
+            <form id="student-form">
+              <div class="field-row">
+                <div class="field-group"><label>Nome</label><input id="name" name="name" placeholder="Nome do aluno" required /></div>
+                <div class="field-group"><label>RA</label><input id="ra" name="ra" placeholder="Número de registro" required /></div>
+              </div>
+              <div class="field-row">
+                <div class="field-group"><label>Sala</label><select id="room-select" name="room_id" class="form-control"></select></div>
+              </div>
+              <div class="field-row">
+                <div class="field-group"><label>Nome do responsável</label><input id="guardian_name" name="guardian_name" placeholder="Nome do responsável" required /></div>
+                <div class="field-group"><label>WhatsApp</label><input id="guardian_phone" name="guardian_phone" type="tel" placeholder="5598999123456" required /></div>
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Salvar</button>
+                <button type="button" id="cancel-add-student" class="btn btn-secondary">Cancelar</button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <section id="page-rooms" class="page" style="display:none;">
+          <div class="card" style="margin-bottom:20px;">
+            <div class="card-body">
+              <form id="room-form" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; align-items: flex-end;">
+                <div class="form-group" style="margin: 0;">
+                  <label for="room-name">Nome/Codigo</label>
+                  <input id="room-name" class="form-control" placeholder="ex: 1A" required />
+                </div>
+                <div class="form-group" style="margin: 0;">
+                  <label for="room-year">Ano</label>
+                  <input id="room-year" class="form-control" placeholder="ex: 1º ANO A" />
+                </div>
+                <div class="form-group" style="margin: 0;">
+                  <label for="room-series">Serie</label>
+                  <input id="room-series" class="form-control" placeholder="ex: 1ª Serie EF" />
+                </div>
+                <div class="form-group" style="margin: 0;">
+                  <label for="room-shift">Turno</label>
+                  <select id="room-shift" class="form-control">
+                    <option value="">Selecione</option>
+                    <option value="Manha">Manha</option>
+                    <option value="Tarde">Tarde</option>
+                    <option value="Noite">Noite</option>
+                  </select>
+                </div>
+                <button type="submit" class="btn btn-primary" style="height: 44px;">Adicionar sala</button>
+              </form>
+            </div>
+          </div>
+          <div id="rooms-main-view">
+            <div class="room-summary" style="display:flex;align-items:center;gap:16px;margin-bottom:18px;">
+              <div class="form-group" style="margin:0;min-width:200px;">
+                <label for="room-period-filter">Turno</label>
+                <select id="room-period-filter" class="form-control">
+                  <option value="">Todos</option>
+                  <option value="Manha">Manhã</option>
+                  <option value="Tarde">Tarde</option>
+                  <option value="Noite">Noite</option>
+                </select>
+              </div>
+              <div style="margin-left:auto;">
+                <span>Total de salas:</span>
+                <strong id="room-count">0</strong>
+              </div>
+            </div>
+            <ul id="rooms-list" class="cards-list"></ul>
+          </div>
+
+          <div id="room-detail-panel" class="room-detail-panel hidden">
+            <div class="room-detail-header">
+              <button type="button" id="back-to-rooms" class="btn btn-secondary btn-sm">← Voltar</button>
+              <div>
+                <h3 id="detail-room-title">Sala</h3>
+                <p id="detail-room-meta" class="room-detail-meta">Ano • Turno</p>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header">
+                <h4>Alunos da sala</h4>
+              </div>
+              <div class="card-body">
+                <div class="table-wrap">
+                  <table class="table-list" id="room-students-table">
+                    <thead>
+                      <tr>
+                        <th>Aluno</th>
+                        <th>RA</th>
+                        <th>Sala</th>
+                        <th>Responsável</th>
+                        <th>Telefone</th>
+                      </tr>
+                    </thead>
+                    <tbody></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="page-calls" class="page" style="display:none;">
+          <div class="card" style="margin-bottom:20px;">
+            <div class="card-body" style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;">
+              <div class="form-group" style="margin:0;min-width:220px;">
+                <label>Data</label>
+                <input type="date" class="form-control" id="calls-date">
+              </div>
+              <button type="button" id="load-calls" class="btn btn-primary">Carregar</button>
+            </div>
+          </div>
+          <div id="calls-list" class="cards-list"></div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container" class="toast-container"></div>
+  <script src="app.js"></script>
+</body>
+</html>

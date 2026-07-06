@@ -1,0 +1,33 @@
+CREATE DATABASE IF NOT EXISTS siga_escola CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE siga_escola;
+
+CREATE TABLE IF NOT EXISTS rooms (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS students (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  ra VARCHAR(100) NOT NULL,
+  series VARCHAR(100) NOT NULL,
+  guardian_name VARCHAR(255) NOT NULL,
+  guardian_phone VARCHAR(30) NOT NULL,
+  room_id INT DEFAULT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS attendance (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  student_id INT NOT NULL,
+  date DATE NOT NULL,
+  status ENUM('present', 'absent', 'excused') NOT NULL DEFAULT 'present',
+  reason VARCHAR(255),
+  notified TINYINT(1) DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
+  UNIQUE KEY student_date_unique (student_id, date)
+);
+
