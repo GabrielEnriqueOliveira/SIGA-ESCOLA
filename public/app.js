@@ -4,6 +4,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const navItems = document.querySelectorAll('.nav-item[data-page]');
   const pageSections = document.querySelectorAll('.page');
   const clockEl = document.getElementById('clock');
+  const mobileNavToggle = document.getElementById('mobile-nav-toggle');
+  const sidebar = document.getElementById('sidebar');
+  const mobileMenuBackdrop = document.getElementById('mobile-menu-backdrop');
 
   const studentForm = document.getElementById('student-form');
   const studentsTableBody = document.querySelector('#students-table tbody');
@@ -95,10 +98,49 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  function setMobileMenu(isOpen) {
+    if (!sidebar || !mobileNavToggle) return;
+
+    sidebar.classList.toggle('open', isOpen);
+    mobileNavToggle.classList.toggle('active', isOpen);
+    mobileNavToggle.setAttribute('aria-expanded', String(isOpen));
+    mobileNavToggle.setAttribute('aria-label', isOpen ? 'Fechar menu' : 'Abrir menu');
+
+    if (mobileMenuBackdrop) {
+      mobileMenuBackdrop.classList.toggle('show', isOpen);
+    }
+
+    document.body.classList.toggle('menu-open', isOpen && window.innerWidth <= 768);
+  }
+
+  function closeMobileMenu() {
+    if (window.innerWidth <= 768) {
+      setMobileMenu(false);
+    }
+  }
+
   navItems.forEach(el => el.addEventListener('click', (event) => {
     event.preventDefault();
     navigate(el.dataset.page);
+    closeMobileMenu();
   }));
+
+  if (mobileNavToggle && sidebar) {
+    mobileNavToggle.addEventListener('click', () => {
+      const isOpen = !sidebar.classList.contains('open');
+      setMobileMenu(isOpen);
+    });
+  }
+
+  if (mobileMenuBackdrop) {
+    mobileMenuBackdrop.addEventListener('click', closeMobileMenu);
+  }
+
+  window.addEventListener('resize', () => {
+    if (window.innerWidth > 768) {
+      setMobileMenu(false);
+    }
+  });
 
   function updateClock() {
     const now = new Date();
