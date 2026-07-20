@@ -486,6 +486,44 @@ input, select, textarea, button { outline: none; }
 .badge-gray { background: var(--bg); color: var(--muted); }
 
 .cards-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; padding: 0; margin: 0; list-style: none; }
+.calls-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.calls-summary { margin-bottom: 16px; }
+.calls-summary-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  background: linear-gradient(135deg, #f8fbff, #eef5ff);
+  border: 1px solid rgba(27,108,168,0.12);
+  border-radius: 18px;
+  padding: 18px 20px;
+}
+.calls-summary-title { font-size: 1rem; font-weight: 800; color: var(--accent); }
+.calls-summary-date { font-size: 0.95rem; color: var(--muted); margin-top: 4px; }
+.calls-summary-stats { display: flex; flex-wrap: wrap; gap: 12px; }
+.calls-summary-stats > div {
+  min-width: 84px;
+  text-align: center;
+  background: #fff;
+  border-radius: 12px;
+  padding: 10px 12px;
+  box-shadow: 0 8px 18px rgba(15,23,42,0.06);
+}
+.calls-summary-stats span { display: block; font-size: 1.1rem; font-weight: 800; color: var(--accent); }
+.calls-summary-stats small { color: var(--muted); }
+.call-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 10px 24px rgba(15,23,42,0.04);
+}
+.call-card-header { display: flex; justify-content: space-between; align-items: start; gap: 12px; margin-bottom: 12px; }
+.call-card h4 { margin: 0 0 4px; font-size: 1rem; }
+.call-card p { margin: 0; color: var(--muted); font-size: 0.92rem; }
+.call-card-body { display: grid; gap: 8px; }
+.call-card-body > div { display: flex; justify-content: space-between; gap: 8px; padding-top: 8px; border-top: 1px solid #eef2f7; }
+.call-label { color: var(--muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: .04em; }
 .room-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 18px; }
 
 .empty-state {

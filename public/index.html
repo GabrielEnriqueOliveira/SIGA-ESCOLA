@@ -228,13 +228,20 @@
           <div class="card" style="margin-bottom:20px;">
             <div class="card-body" style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;">
               <div class="form-group" style="margin:0;min-width:220px;">
+                <label>Sala</label>
+                <select class="form-control" id="calls-room">
+                  <option value="">Todas as salas</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin:0;min-width:220px;">
                 <label>Data</label>
                 <input type="date" class="form-control" id="calls-date">
               </div>
               <button type="button" id="load-calls" class="btn btn-primary">Carregar</button>
             </div>
           </div>
-          <div id="calls-list" class="cards-list"></div>
+          <div id="calls-summary" class="calls-summary"></div>
+          <div id="calls-list" class="calls-list"></div>
         </section>
       </div>
     </div>

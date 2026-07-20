@@ -8,6 +8,7 @@ dotenv.config();
 const app = express();
 const requestedPort = process.env.PORT ? parseInt(process.env.PORT, 10) : null;
 const portCandidates = requestedPort ? [requestedPort] : [8080, 3000, 3001, 5000, 4000];
+const resetDbEnabled = process.env.RESET_DB_ENABLED === 'true' || process.env.RESET_DB_ENABLED === '1';
 
 app.use(cors());
 app.use(express.json());
@@ -278,19 +279,25 @@ app.post('/api/attendance/bulk', async (req, res) => {
 });
 
 app.get('/api/attendance', async (req, res) => {
-  const { date } = req.query;
+  const { date, room_id } = req.query;
   const selectedDate = date || new Date().toISOString().slice(0, 10);
 
   try {
-    const [rows] = await db.execute(
-      `SELECT a.id, a.date, a.status, a.reason, a.notified, a.student_id, s.name AS student_name, s.series, r.name AS room_name
+    let query = `SELECT a.id, a.date, a.status, a.reason, a.notified, a.student_id, s.name AS student_name, s.series, r.name AS room_name
        FROM attendance a
        JOIN students s ON a.student_id = s.id
        LEFT JOIN rooms r ON s.room_id = r.id
-       WHERE a.date = ?
-       ORDER BY s.series, s.name`,
-      [selectedDate]
-    );
+       WHERE a.date = ?`;
+    const params = [selectedDate];
+
+    if (room_id) {
+      query += ' AND s.room_id = ?';
+      params.push(room_id);
+    }
+
+    query += ' ORDER BY s.series, s.name';
+
+    const [rows] = await db.execute(query, params);
     res.json(rows);
   } catch (error) {
     console.error('Erro ao buscar faltas:', error);
@@ -299,6 +306,12 @@ app.get('/api/attendance', async (req, res) => {
 });
 
 app.post('/api/reset', async (req, res) => {
+  if (!resetDbEnabled) {
+    return res.status(403).json({
+      error: 'Reset do banco desativado por segurança. Defina RESET_DB_ENABLED=true para habilitar.'
+    });
+  }
+
   try {
     await db.execute('DELETE FROM attendance');
     await db.execute('DELETE FROM students');

@@ -25,8 +25,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const attendanceActions = document.getElementById('attendance-actions');
 
   const callsDateInput = document.getElementById('calls-date');
+  const callsRoomSelect = document.getElementById('calls-room');
   const loadCallsButton = document.getElementById('load-calls');
   const callsList = document.getElementById('calls-list');
+  const callsSummary = document.getElementById('calls-summary');
 
   const roomForm = document.getElementById('room-form');
   const roomPeriodFilter = document.getElementById('room-period-filter');
@@ -43,6 +45,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!phone) return '';
     const cleaned = phone.replace(/\D/g, '').replace(/^55/, '');
     return cleaned.length === 11 ? `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7)}` : phone;
+  }
+
+  function escapeHtml(value) {
+    return String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 
   function showToast(message, type = 'success', duration = 3200) {
@@ -156,6 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const filteredRooms = roomPeriodFilter.value ? rooms.filter(r => r.shift === roomPeriodFilter.value) : rooms;
       roomFilter.innerHTML = '<option value="">Todas as salas</option>' + rooms.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
       attendanceRoomFilter.innerHTML = '<option value="">Todas</option>' + rooms.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+      callsRoomSelect.innerHTML = '<option value="">Todas as salas</option>' + rooms.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
       roomSelect.innerHTML = '<option value="">Nenhuma</option>' + rooms.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
       roomCount.textContent = filteredRooms.length;
       roomsList.innerHTML = filteredRooms.length
@@ -289,6 +301,16 @@ document.addEventListener('DOMContentLoaded', () => {
   roomPeriodFilter.addEventListener('change', loadRooms);
   attendanceRoomFilter.addEventListener('change', loadAttendance);
   attendanceDateInput.addEventListener('change', loadAttendance);
+  callsRoomSelect.addEventListener('change', () => {
+    if (callsDateInput.value) {
+      loadCalls();
+    }
+  });
+  callsDateInput.addEventListener('change', () => {
+    if (callsDateInput.value) {
+      loadCalls();
+    }
+  });
 
   studentsTableBody.addEventListener('click', async (e) => {
     if (!e.target.classList.contains('delete-student-btn')) return;
@@ -395,24 +417,88 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  loadCallsButton.addEventListener('click', async () => {
+  async function loadCalls() {
     try {
       setButtonLoading(loadCallsButton, true, 'Carregando...');
       const date = callsDateInput.value || new Date().toISOString().slice(0,10);
-      const data = await fetchJSON('/api/attendance?date=' + date);
+      callsDateInput.value = date;
+      const roomId = callsRoomSelect.value;
+      const params = new URLSearchParams({ date });
+      if (roomId) params.set('room_id', roomId);
+
+      const data = await fetchJSON('/api/attendance?' + params.toString());
+      const selectedRoomLabel = callsRoomSelect.options[callsRoomSelect.selectedIndex]?.text || 'Todas as salas';
+      const total = data.length;
+      const present = data.filter(item => item.status === 'present').length;
+      const absent = data.filter(item => item.status === 'absent').length;
+      const excused = data.filter(item => item.status === 'excused').length;
+      const notified = data.filter(item => item.notified).length;
+
+      callsSummary.innerHTML = `
+        <div class="calls-summary-card">
+          <div>
+            <div class="calls-summary-title">${escapeHtml(selectedRoomLabel)}</div>
+            <div class="calls-summary-date">${escapeHtml(date)}</div>
+          </div>
+          <div class="calls-summary-stats">
+            <div><span>${total}</span><small>Registros</small></div>
+            <div><span>${present}</span><small>Presentes</small></div>
+            <div><span>${absent}</span><small>Faltas</small></div>
+            <div><span>${excused}</span><small>Atestados</small></div>
+            <div><span>${notified}</span><small>Notificados</small></div>
+          </div>
+        </div>
+      `;
+
       if (!data.length) {
-        callsList.innerHTML = '<p class="empty-state">Sem chamadas</p>';
-        showToast('Nenhuma chamada encontrada para a data.', 'info');
+        callsList.innerHTML = '<div class="empty-state">Nenhuma chamada encontrada para a sala e data selecionadas.</div>';
         return;
       }
-      callsList.innerHTML = data.map(d => `<div class="call-item"><span>${d.date} — ${d.student_name} — ${d.series} — ${d.status}${d.reason ? ' — ' + d.reason : ''}</span><span>${d.notified ? 'Notificado' : 'Não notificado'}</span></div>`).join('');
+
+      callsList.innerHTML = data.map(item => {
+        const statusMap = {
+          present: ['Presente', 'badge-green'],
+          absent: ['Faltou', 'badge-red'],
+          excused: ['Atestado', 'badge-yellow']
+        };
+        const [statusText, statusClass] = statusMap[item.status] || ['Sem status', 'badge-gray'];
+        return `
+          <article class="call-card">
+            <div class="call-card-header">
+              <div>
+                <h4>${escapeHtml(item.student_name)}</h4>
+                <p>${escapeHtml(item.room_name || 'Sem sala')} • ${escapeHtml(item.series || '-')}</p>
+              </div>
+              <span class="badge ${statusClass}">${statusText}</span>
+            </div>
+            <div class="call-card-body">
+              <div>
+                <span class="call-label">Data</span>
+                <strong>${escapeHtml(item.date)}</strong>
+              </div>
+              <div>
+                <span class="call-label">Motivo</span>
+                <strong>${escapeHtml(item.reason || 'Não informado')}</strong>
+              </div>
+              <div>
+                <span class="call-label">Status</span>
+                <strong>${item.notified ? '✅ Notificado' : '⏳ Pendente'}</strong>
+              </div>
+            </div>
+          </article>
+        `;
+      }).join('');
     } catch (error) {
       console.error(error);
+      callsSummary.innerHTML = '';
+      callsList.innerHTML = '<div class="empty-state">Erro ao carregar chamadas.</div>';
       showToast(error.message || 'Erro ao carregar chamadas.', 'error');
     } finally {
       setButtonLoading(loadCallsButton, false);
     }
-  });
+  }
+
+  loadCallsButton.addEventListener('click', loadCalls);
 
   roomForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -480,6 +566,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadSeries();
     fetchStudents();
     loadAttendance();
+    loadCalls();
   }
 
   init();
